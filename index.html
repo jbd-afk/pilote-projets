@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0f172a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Pilote de Projets</title>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --card2: #273449; --line: #334155;
+    --txt: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8; --ok: #4ade80;
+    --warn: #fbbf24; --bad: #f87171; --idea: #c084fc;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--txt); min-height: 100vh; padding-bottom: 76px; }
+  header { padding: 18px 16px 6px; }
+  header h1 { font-size: 22px; }
+  header p { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--card); border-top: 1px solid var(--line); z-index: 10; }
+  nav button { flex: 1; background: none; border: 0; color: var(--muted); padding: 10px 0 14px; font-size: 11px; cursor: pointer; }
+  nav button .ic { display: block; font-size: 20px; margin-bottom: 2px; }
+  nav button.active { color: var(--accent); }
+  main { padding: 10px 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .card h3 { font-size: 16px; margin-bottom: 4px; }
+  .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 18px 2px 8px; }
+  .pill { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); margin-right: 6px; }
+  .pill.ok { color: var(--ok); border-color: var(--ok); }
+  .pill.bad { color: var(--bad); border-color: var(--bad); }
+  .pill.warn { color: var(--warn); border-color: var(--warn); }
+  .meta { color: var(--muted); font-size: 12px; margin-top: 6px; }
+  .row-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { background: var(--card2); border: 1px solid var(--line); color: var(--txt); border-radius: 9px; padding: 7px 12px; font-size: 13px; cursor: pointer; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #0f172a; font-weight: 600; }
+  .btn.danger { color: var(--bad); }
+  .fab { position: fixed; right: 16px; bottom: 86px; background: var(--accent); color: #0f172a; border: 0; border-radius: 999px; width: 56px; height: 56px; font-size: 28px; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.4); z-index: 9; }
+  .empty { color: var(--muted); font-size: 14px; text-align: center; padding: 30px 10px; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: none; align-items: flex-end; justify-content: center; z-index: 20; }
+  .overlay.open { display: flex; }
+  .sheet { background: var(--card); width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; border-radius: 18px 18px 0 0; padding: 18px 16px 26px; }
+  .sheet h2 { font-size: 17px; margin-bottom: 14px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 5px; }
+  input[type=text], textarea, select { width: 100%; background: var(--card2); border: 1px solid var(--line); color: var(--txt); border-radius: 9px; padding: 10px; font-size: 15px; font-family: inherit; }
+  textarea { min-height: 64px; resize: vertical; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: var(--card2); border: 1px solid var(--line); color: var(--txt); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #0f172a; font-weight: 600; }
+  .cond { display: flex; align-items: center; gap: 8px; background: var(--card2); border-radius: 9px; padding: 9px 10px; margin-bottom: 6px; font-size: 14px; }
+  .cond input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--ok); }
+  .cond .del { margin-left: auto; background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 15px; }
+  .dep { font-size: 12px; color: var(--warn); margin-top: 6px; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .sheet-actions button { flex: 1; padding: 12px; font-size: 15px; border-radius: 10px; border: 0; cursor: pointer; }
+  .save { background: var(--accent); color: #0f172a; font-weight: 700; }
+  .cancel { background: var(--card2); color: var(--txt); }
+  .inline-form { display: flex; gap: 6px; margin-top: 8px; }
+  .inline-form input, .inline-form select { flex: 1; }
+  .inline-form button { white-space: nowrap; }
+  .err { color: var(--bad); font-size: 13px; margin-top: 8px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏡 Pilote de Projets</h1>
+  <p id="subtitle"></p>
+</header>
+<main id="main"></main>
+<button class="fab" id="fab" title="Nouveau">+</button>
+<nav>
+  <button data-view="home" class="active"><span class="ic">🏠</span>Maintenant</button>
+  <button data-view="projects"><span class="ic">📋</span>Projets</button>
+  <button data-view="ideas"><span class="ic">💡</span>Idées</button>
+  <button data-view="data"><span class="ic">⚙️</span>Données</button>
+</nav>
+
+<div class="overlay" id="overlay">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+'use strict';
+var KEY = 'pilote-projets-v1';
+var STORAGE_OK = false;
+try { localStorage.setItem('pp-test', '1'); localStorage.removeItem('pp-test'); STORAGE_OK = true; } catch (e) { STORAGE_OK = false; }
+var data;
+try {
+  data = JSON.parse(STORAGE_OK ? (localStorage.getItem(KEY) || '{"items":[]}') : '{"items":[]}');
+} catch (e) { data = { items: [] }; }
+function save() {
+  if (!STORAGE_OK) return; // aperçu du canvas : pas de stockage disponible, on garde en mémoire
+  try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {}
+}
+
+var HORIZONS = { court: 'Court terme', moyen: 'Moyen terme', long: 'Long terme' };
+var STATUTS = { idea: '💡 Idée', todo: '📌 Prévu', doing: '🔨 En cours', pause: '⏸ En pause', done: '✅ Fait' };
+var COND_TYPES = { materiel: '🛒 Matériel', meteo: '🌦 Météo', prealable: '⛓ Préalable', autre: '📝 Autre' };
+
+var view = 'home', editingId = null, sheetConds = [], condTypePending = null;
+
+function $(s) { return document.querySelector(s); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function byId(id) {
+  for (var i = 0; i < data.items.length; i++) if (data.items[i].id === id) return data.items[i];
+  return null;
+}
+
+function blockers(p) {
+  var out = [];
+  if (p.statut === 'done') return out;
+  (p.conditions || []).forEach(function (c) {
+    if (c.type === 'prealable') {
+      var dep = byId(c.prealableId);
+      if (!dep || dep.statut !== 'done') out.push('Attend « ' + (dep ? dep.titre : '?') + ' »');
+    } else if (!c.done) {
+      out.push(COND_TYPES[c.type] + ' : ' + c.texte);
+    }
+  });
+  if (p.statut === 'idea') out.push('À planifier (encore une idée)');
+  return out;
+}
+
+function render() {
+  var btns = document.querySelectorAll('nav button');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].dataset.view === view);
+  var m = $('#main');
+  if (view === 'home') m.innerHTML = viewHome();
+  else if (view === 'projects') m.innerHTML = viewProjects();
+  else if (view === 'ideas') m.innerHTML = viewIdeas();
+  else m.innerHTML = viewData();
+  $('#subtitle').textContent = data.items.length ? data.items.length + ' élément(s) enregistrés' : 'Commence par capturer une idée';
+  if (!STORAGE_OK) $('#subtitle').textContent += ' · ⚠️ aperçu : sauvegardé sur cet appareil seulement après installation sur le Raspberry';
+}
+
+function projCard(p, showBlocks) {
+  var bl = blockers(p);
+  var conds = p.conditions || [];
+  var doneN = conds.filter(function (c) { return c.done; }).length;
+  var total = conds.length;
+  var condLine = total ? '<div class="meta">Conditions : ' + doneN + '/' + total + '</div>' : '';
+  var depLine = '';
+  conds.forEach(function (c) {
+    if (c.type === 'prealable') {
+      var d = byId(c.prealableId);
+      if (d && d.statut !== 'done') depLine += '<div class="dep">⛓ bloqué par « ' + esc(d.titre) + ' »</div>';
+    }
+  });
+  var badge = '';
+  if (p.statut !== 'done') {
+    if (bl.length) {
+      if (showBlocks) badge = bl.map(function (b) { return '<div class="dep">• ' + esc(b) + '</div>'; }).join('');
+      else badge = '<span class="pill bad">bloqué (' + bl.length + ')</span>';
+    } else badge = '<span class="pill ok">prêt</span>';
+  }
+  return '<div class="card" data-action="edit" data-id="' + p.id + '">'
+    + '<h3>' + esc(p.titre) + '</h3>'
+    + '<div><span class="pill ' + (p.statut === 'done' ? 'ok' : (p.statut === 'doing' ? 'warn' : '')) + '">' + STATUTS[p.statut] + '</span>'
+    + (p.horizon ? '<span class="pill">' + HORIZONS[p.horizon] + '</span>' : '') + '</div>'
+    + badge + condLine + depLine + '</div>';
+}
+
+function viewHome() {
+  var projets = data.items.filter(function (i) { return i.type === 'projet'; });
+  var ready = projets.filter(function (p) { return p.statut !== 'done' && blockers(p).length === 0; });
+  var blocked = projets.filter(function (p) { return p.statut !== 'done' && blockers(p).length > 0; });
+  var done = projets.filter(function (p) { return p.statut === 'done'; });
+  var h = '';
+  h += '<div class="section-title">✅ Je peux faire maintenant (' + ready.length + ')</div>';
+  h += ready.length ? ready.map(function (p) { return projCard(p, false); }).join('') : '<div class="card empty">Aucun projet prêt. Coche des conditions ou termine les préalables.</div>';
+  h += '<div class="section-title">🚧 Bloqués (' + blocked.length + ')</div>';
+  h += blocked.length ? blocked.map(function (p) { return projCard(p, true); }).join('') : '<div class="card empty">Rien de bloqué.</div>';
+  h += '<div class="section-title">🏆 Terminés (' + done.length + ')</div>';
+  h += done.length ? done.map(function (p) { return projCard(p, false); }).join('') : '<div class="card empty">Pas encore.</div>';
+  return h;
+}
+
+function viewProjects() {
+  var projets = data.items.filter(function (i) { return i.type === 'projet' && i.statut !== 'done'; });
+  return projets.length ? projets.map(function (p) { return projCard(p, true); }).join('') : '<div class="card empty">Aucun projet actif. Appuie sur + pour en créer.</div>';
+}
+
+function viewIdeas() {
+  var ideas = data.items.filter(function (i) { return i.type === 'idee' || (i.type === 'projet' && i.statut === 'idea'); });
+  return ideas.length ? ideas.map(function (i) {
+    return '<div class="card" data-action="edit" data-id="' + i.id + '"><h3>💡 ' + esc(i.titre) + '</h3>'
+      + (i.notes ? '<div class="meta">' + esc(i.notes) + '</div>' : '')
+      + '<div class="row-actions"><button class="btn primary" data-action="promote" data-id="' + i.id + '">→ En faire un projet</button></div></div>';
+  }).join('') : '<div class="card empty">Aucune idée en attente. Capture-les ici, vite, sans réfléchir.</div>';
+}
+
+function viewData() {
+  return '<div class="card"><h3>💾 Sauvegarde</h3>'
+    + '<p class="meta">Dans cette version, les données restent sur l\u2019appareil. Exporte-les régulièrement (surtout avant la migration vers le Raspberry).</p>'
+    + '<div class="row-actions">'
+    + '<button class="btn" data-action="export">⬇️ Exporter (JSON)</button>'
+    + '<button class="btn" data-action="import">⬆️ Importer</button>'
+    + '<button class="btn danger" data-action="wipe">🗑 Tout effacer</button>'
+    + '</div></div>'
+    + '<div class="card"><h3>🏡 Installation sur le Raspberry</h3>'
+    + '<p class="meta">1. Télécharge ce fichier (bouton export du canvas) et copie-le sur le Pi, ex. /home/pi/pilote/index.html<br>'
+    + '2. Sers-le : <code>python3 -m http.server 8080 -d /home/pi/pilote</code><br>'
+    + '3. Installe Tailscale sur le Pi et le téléphone : accès chiffré partout, rien d\u2019exposé aux robots<br>'
+    + '4. Sur le téléphone : ouvre l\u2019URL Tailscale, puis « Ajouter à l\u2019écran d\u2019accueil »</p></div>';
+}
+
+// ---------- Formulaire ----------
+function openSheet(id) {
+  editingId = id || null;
+  var it = id ? byId(id) : null;
+  var s = $('#sheet');
+  var type = it ? it.type : 'projet';
+  s.innerHTML = ''
+    + '<h2>' + (it ? 'Modifier' : 'Nouveau') + '</h2>'
+    + '<label>Type</label>'
+    + '<div class="chips">'
+    + '<button class="chip type-chip' + (type === 'projet' ? ' on' : '') + '" data-v="projet">📋 Projet</button>'
+    + '<button class="chip type-chip' + (type === 'idee' ? ' on' : '') + '" data-v="idee">💡 Idée</button>'
+    + '</div>'
+    + '<label>Titre *</label>'
+    + '<input type="text" id="f-titre" value="' + esc(it ? it.titre : '') + '" placeholder="Ex. : poser la VMC" />'
+    + '<div id="projet-fields"' + (type === 'idee' ? ' style="display:none"' : '') + '>'
+    + '<label>Horizon</label>'
+    + '<div class="chips" id="f-horizon">'
+    + Object.keys(HORIZONS).map(function (k) { return '<button class="chip hz-chip' + (it && it.horizon === k ? ' on' : '') + '" data-v="' + k + '">' + HORIZONS[k] + '</button>'; }).join('')
+    + '</div>'
+    + '<label>Statut</label>'
+    + '<select id="f-statut">'
+    + Object.keys(STATUTS).map(function (k) { return '<option value="' + k + '"' + (it && it.statut === k ? ' selected' : '') + '>' + STATUTS[k] + '</option>'; }).join('')
+    + '</select>'
+    + '<label>Notes</label>'
+    + '<textarea id="f-notes" placeholder="Détails, dimensions, liens, mesures…">' + esc(it ? it.notes : '') + '</textarea>'
+    + '<label>Conditions (ajoute au fil de l\u2019eau)</label>'
+    + '<div id="cond-list"></div>'
+    + '<div class="chips" style="margin-top:6px">'
+    + '<button class="chip" data-action="addcond" data-t="materiel">+ Matériel</button>'
+    + '<button class="chip" data-action="addcond" data-t="meteo">+ Météo</button>'
+    + '<button class="chip" data-action="addcond" data-t="prealable">+ Projet préalable</button>'
+    + '<button class="chip" data-action="addcond" data-t="autre">+ Autre</button>'
+    + '</div>'
+    + '<div id="cond-form"></div>'
+    + '</div>'
+    + '<div class="err hidden" id="f-err"></div>'
+    + '<div class="sheet-actions">'
+    + '<button class="cancel" data-action="closesheet">Annuler</button>'
+    + '<button class="save" data-action="savesheet">Enregistrer</button>'
+    + '</div>';
+  sheetConds = it && it.conditions ? JSON.parse(JSON.stringify(it.conditions)) : [];
+  condTypePending = null;
+  renderConds();
+  $('#overlay').classList.add('open');
+  setTimeout(function () { $('#f-titre').focus(); }, 50);
+}
+
+function renderConds() {
+  var el = $('#cond-list');
+  if (!el) return;
+  el.innerHTML = sheetConds.map(function (c, i) {
+    if (c.type === 'prealable') {
+      var d = byId(c.prealableId);
+      return '<div class="cond"><span>⛓ Après « ' + esc(d ? d.titre : '?') + ' »</span>'
+        + '<button class="del" data-action="delcond" data-i="' + i + '">✕</button></div>';
+    }
+    return '<div class="cond"><input type="checkbox"' + (c.done ? ' checked' : '') + ' data-action="togglecond" data-i="' + i + '">'
+      + '<span>' + COND_TYPES[c.type] + ' : ' + esc(c.texte) + '</span>'
+      + '<button class="del" data-action="delcond" data-i="' + i + '">✕</button></div>';
+  }).join('');
+  if (condTypePending) showCondForm(condTypePending);
+}
+
+function showCondForm(type) {
+  var f = $('#cond-form');
+  if (!f) return;
+  if (type === 'prealable') {
+    var projets = data.items.filter(function (p) { return p.type === 'projet' && p.id !== editingId; });
+    if (!projets.length) { f.innerHTML = '<div class="err">Crée d\u2019abord un autre projet avant d\u2019ajouter un préalable.</div>'; return; }
+    f.innerHTML = '<div class="inline-form"><select id="c-prealable">'
+      + projets.map(function (p) { return '<option value="' + p.id + '">' + esc(p.titre) + '</option>'; }).join('')
+      + '</select><button class="btn primary" data-action="addprealable">Ajouter</button></div>';
+  } else {
+    var ph = type === 'materiel' ? 'Quoi acheter ?' : (type === 'meteo' ? 'Quelle condition météo ?' : 'Quelle condition ?');
+    f.innerHTML = '<div class="inline-form"><input type="text" id="c-texte" placeholder="' + ph + '">'
+      + '<button class="btn primary" data-action="addtextcond" data-t="' + type + '">Ajouter</button></div>';
+    setTimeout(function () { var el = $('#c-texte'); if (el) el.focus(); }, 50);
+  }
+}
+
+function closeSheet() { $('#overlay').classList.remove('open'); editingId = null; }
+
+function saveSheet() {
+  var titre = $('#f-titre').value.trim();
+  if (!titre) {
+    var err = $('#f-err'); err.textContent = 'Il faut un titre.'; err.classList.remove('hidden');
+    return;
+  }
+  var type = $('#sheet .type-chip.on').dataset.v;
+  var hz = $('#sheet .hz-chip.on');
+  var obj = editingId ? byId(editingId) : { id: 'p' + Date.now() };
+  obj.type = type;
+  obj.titre = titre;
+  if (type === 'projet') {
+    obj.horizon = hz ? hz.dataset.v : null;
+    obj.statut = $('#f-statut').value;
+    obj.notes = $('#f-notes').value;
+    obj.conditions = sheetConds;
+  } else {
+    obj.notes = $('#f-notes') ? $('#f-notes').value : '';
+  }
+  if (!editingId) data.items.push(obj);
+  save(); closeSheet(); render();
+}
+
+function promote(id) {
+  var it = byId(id);
+  it.type = 'projet'; it.statut = 'todo'; it.horizon = null;
+  if (!it.conditions) it.conditions = [];
+  save(); render();
+}
+
+// ---------- Événements (délégation, aucun handler inline) ----------
+document.addEventListener('click', function (e) {
+  var el = e.target.closest ? e.target.closest('[data-action]') : null;
+  if (el) {
+    var a = el.dataset.action;
+    if (a === 'edit') { openSheet(el.dataset.id); return; }
+    if (a === 'promote') { e.stopPropagation(); promote(el.dataset.id); return; }
+    if (a === 'closesheet') { closeSheet(); return; }
+    if (a === 'savesheet') { saveSheet(); return; }
+    if (a === 'addcond') { condTypePending = el.dataset.t; showCondForm(el.dataset.t); return; }
+    if (a === 'delcond') { sheetConds.splice(parseInt(el.dataset.i, 10), 1); condTypePending = null; $('#cond-form').innerHTML = ''; renderConds(); return; }
+    if (a === 'addtextcond') {
+      var t = $('#c-texte').value.trim();
+      if (t) { sheetConds.push({ type: el.dataset.t, texte: t, done: false }); condTypePending = null; $('#cond-form').innerHTML = ''; renderConds(); }
+      return;
+    }
+    if (a === 'addprealable') {
+      var pid = $('#c-prealable').value;
+      if (pid) { sheetConds.push({ type: 'prealable', prealableId: pid, done: false }); condTypePending = null; $('#cond-form').innerHTML = ''; renderConds(); }
+      return;
+    }
+    if (a === 'export') { exportData(); return; }
+    if (a === 'import') { importData(); return; }
+    if (a === 'wipe') { wipeAll(); return; }
+  }
+  // chips type / horizon dans le formulaire
+  var chip = e.target.closest ? e.target.closest('.chip') : null;
+  if (chip && chip.classList) {
+    if (chip.classList.contains('type-chip')) {
+      document.querySelectorAll('#sheet .type-chip').forEach(function (c) { c.classList.remove('on'); });
+      chip.classList.add('on');
+      $('#projet-fields').style.display = chip.dataset.v === 'idee' ? 'none' : '';
+      return;
+    }
+    if (chip.classList.contains('hz-chip')) {
+      var on = chip.classList.contains('on');
+      document.querySelectorAll('#sheet .hz-chip').forEach(function (c) { c.classList.remove('on'); });
+      if (!on) chip.classList.add('on');
+      return;
+    }
+  }
+  // navigation
+  var navBtn = e.target.closest ? e.target.closest('nav button') : null;
+  if (navBtn) { view = navBtn.dataset.view; render(); return; }
+  // fab / overlay
+  if (e.target.id === 'fab') { openSheet(null); return; }
+  if (e.target.id === 'overlay') closeSheet();
+});
+
+document.addEventListener('change', function (e) {
+  if (e.target.dataset && e.target.dataset.action === 'togglecond') {
+    sheetConds[parseInt(e.target.dataset.i, 10)].done = e.target.checked;
+    // sauvegarde immédiate si on édite un projet existant
+    if (editingId) {
+      var it = byId(editingId);
+      if (it && it.type === 'projet') { it.conditions = sheetConds; save(); }
+    }
+    renderConds();
+  }
+});
+
+document.addEventListener('change', function (e) {
+  if (e.target.id === 'f-statut' || e.target.id === 'f-notes' || e.target.id === 'f-titre') return;
+});
+
+// Entrée clavier dans le formulaire de condition
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && e.target.id === 'c-texte') {
+    e.preventDefault();
+    var t = e.target.value.trim();
+    if (t) {
+      sheetConds.push({ type: condTypePending || 'autre', texte: t, done: false });
+      condTypePending = null;
+      $('#cond-form').innerHTML = '';
+      renderConds();
+    }
+  }
+  if (e.key === 'Escape') closeSheet();
+});
+
+// ---------- Données ----------
+function download(name, text) {
+  var blob = new Blob([text], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 500);
+}
+function exportData() {
+  download('pilote-projets-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(data, null, 2));
+}
+function importData() {
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
+  inp.style.display = 'none';
+  document.body.appendChild(inp);
+  inp.addEventListener('change', function () {
+    var f = inp.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var d = JSON.parse(r.result);
+        if (!d || !d.items) throw new Error('bad');
+        data = d; save(); render();
+      } catch (err) {
+        var m = $('#main');
+        m.insertAdjacentHTML('afterbegin', '<div class="err">Fichier invalide.</div>');
+      }
+    };
+    r.readAsText(f);
+    document.body.removeChild(inp);
+  });
+  inp.click();
+}
+function wipeAll() {
+  var m = $('#main');
+  var existing = m.querySelector('.confirm-wipe');
+  if (existing) { data = { items: [] }; save(); render(); return; }
+  m.insertAdjacentHTML('afterbegin', '<div class="card confirm-wipe"><h3>⚠️ Confirmer</h3><p class="meta">Reclique sur « Tout effacer » pour confirmer la suppression définitive.</p></div>');
+}
+
+render();
+</script>
+</body>
+</html>
